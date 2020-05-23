@@ -1,0 +1,73 @@
+#分库分表+读写分离配置文件
+server:
+  port: 8080
+
+spring:
+  shardingsphere:
+    props:
+      sql:
+        show: true
+    datasource:
+      names: master0,master0-slave,master1,master1-slave #数据源，名字随意
+      master0:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://IP:3306/shard-master0?characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT%2B8
+        username: root
+        password: XXXX
+      master0-slave:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://IP:3306/shard-master0-slave?characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT%2B8
+        username: root
+        password: XXXX
+      master1:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://IP:3306/shard-master1?characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT%2B8
+        username: root
+        password: XXXX
+      master1-slave:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://IP:3306/shard-master1-slave?characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT%2B8
+        username: root
+        password: XXXX
+    sharding: #分表规则
+      default-data-source-name: master0 #默认数据源，就是不用进行分库分表,但是会读写分离
+      tables:
+        user: #表名
+          actual-data-nodes: shard-master$->{0..1}.user_$->{0..1} #配置表信息格式为=》数据库名.表名
+          #库分片策略
+          database-strategy:
+            inline:
+              sharding-column: id
+              algorithm-expression: shard-master$->{id % 2} #数据库名
+          #表分片策略
+          table-strategy:
+            inline:
+              sharding-column: id
+              algorithm-expression: user_$->{id % 2} #表名
+      # 读写分离配置
+      master-slave-rules:
+        shard-master0: #这里必须是数据库名
+          master-data-source-name: master0
+          slave-data-source-names: master0-slave
+        shard-master1: #这里必须是数据库名
+          master-data-source-name: master1
+          slave-data-source-names: master1-slave
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/* #MyBaits 别名包扫描路径，通过该属性可以给包中的类注册别名，注册后在 Mapper 对应的 XML 文件中可以直接使用类名，而不用使用全限定的类名
+  type-aliases-package: com.shard.entity # 数据库表与实体类的驼峰命名自动转换
+  global-config: #全局配置
+    db-config:
+      id-type: ID_WORKER  #主键类型  0:数据库ID自增, 1:用户输入ID, 2:全局唯一ID (数字类型唯一ID), 3:全局唯一ID UUID;
+  configuration:
+    map-underscore-to-camel-case: true
+    # 打印sql
+    #log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    com.shard: DEBUG

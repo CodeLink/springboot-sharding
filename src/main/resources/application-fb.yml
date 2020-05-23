@@ -1,0 +1,62 @@
+#单库分表和数据脱敏配置文件
+server:
+  port: 8080
+spring:
+  shardingsphere:
+    props:
+      sql:
+        show: true
+      query: #是否使用密文列查询
+        with:
+          cipher:
+            column: true
+    datasource:
+      names: shardfb #数据源名称
+      shardfb:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://IP:3306/shardfb?characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT%2B8
+        username: root
+        password: XXX
+    sharding: #分表规则
+      tables:
+        user: #表名
+          #inline策略
+          actual-data-nodes: shardfb.user_$->{1..3} #格式为=》数据库名.表名，代表shardfb.user_1，shardfb.user_2，shardfb.user_3三个表
+          table-strategy:
+            #行表达式分片策略
+            #inline.sharding-column: id #分表的字段，用id分表
+            #inline.algorithm-expression: user_$->{id % 3} # 分表算法行表达式groovy语法，=用id进行取模分片，分成3张表
+            #自定义分片策略。分片策略包括分片键和分片算法
+            standard:
+              #自定义取模分片算法
+              #sharding-column: id
+              #precise-algorithm-class-name: com.shard.algorithm.FBPreciseShardingAlgorithm
+              #自定义时间分片算法
+              #标准策略下分片算法包含2个precise + range，range是可选的，但是如果使用 range就必须同precise一起使用。如果不配置range，SQL中的BETWEEN AND将按照全库路由处理。
+              sharding-column: create_time
+              precise-algorithm-class-name: com.shard.algorithm.FBDateStandardShardingAlgorithm
+              range-algorithm-class-name: com.shard.algorithm.FBDateStandardShardingAlgorithm
+    encrypt:
+      encryptors:
+        order_encrypt:
+          qualifiedColumns: orders.name #加密字段
+          type: caes #自定义加密（CAESShardingEncryptor），官方提供的加密中文解密乱码
+          props:
+            deskey: asdjbvdf#$123456 #秘钥，必须是16位
+            #aes.key.value: 1256 #aes加密key
+
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*
+  type-aliases-package: com.shard.entity
+  global-config:
+    db-config:
+      id-type: ID_WORKER
+  configuration:
+    map-underscore-to-camel-case: true
+    # 打印sql
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+logging:
+  level:
+    com.shard: DEBUG

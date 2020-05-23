@@ -1,0 +1,8 @@
+spring:
+  profiles:
+    active: fb
+  main:
+    allow-bean-definition-overriding: true #覆盖加载
+  jackson:
+    time-zone: "GMT+8"
+    date-format: yyyy-MM-dd HH:mm:ss #全局配置返回字符串格式化
