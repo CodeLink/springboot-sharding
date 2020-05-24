@@ -1,0 +1,40 @@
+#数据脱敏配置文件，不能和分表混用，会导致分表不起作用（未解决）
+server:
+  port: 8080
+spring:
+  shardingsphere:
+    props:
+      query: #是否使用密文列查询
+        with:
+          cipher:
+            column: true
+    datasource:
+      names: db-1 #数据源名称，命名随意
+      db-1:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://IP:3306/shardfb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT%2B8
+        username: root
+        password: XXX
+    encrypt:
+      encryptors:
+        order_encrypt:
+          qualifiedColumns: orders.name #加密字段
+          type: caes #自定义加密（CAESShardingEncryptor），官方提供的加密中文解密乱码
+          props:
+            deskey: asdjbvdf#$123456 #秘钥，必须是16位
+            #aes.key.value: 1256 #aes加密key
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*
+  type-aliases-package: com.shard.entity
+  global-config:
+    db-config:
+      id-type: ID_WORKER
+  configuration:
+    map-underscore-to-camel-case: true
+    # 打印sql
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+logging:
+  level:
+    com.shard: DEBUG
