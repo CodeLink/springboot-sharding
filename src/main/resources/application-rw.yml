@@ -13,13 +13,13 @@ spring:
       master:
         type: com.alibaba.druid.pool.DruidDataSource
         driver: com.mysql.cj.jdbc.Driver
-        url: jdbc:mysql://IP:3306/shard-master?characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT%2B8
+        url: jdbc:mysql://IP:3306/shard-master?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT%2B8
         username: root
         password: XXXX
       slave:
         type: com.alibaba.druid.pool.DruidDataSource
         driver: com.mysql.cj.jdbc.Driver
-        url: jdbc:mysql://IP:3306/shard-slave?characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT%2B8
+        url: jdbc:mysql://IP:3306/shard-slave?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT%2B8
         username: root
         password: XXXX
     # 读写分离配置
@@ -42,4 +42,4 @@ mybatis-plus:
 
 logging:
   level:
-    cnm.alun: DEBUG
+    com.shard: DEBUG

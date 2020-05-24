@@ -9,11 +9,11 @@ spring:
         show: true
     datasource:
       #数据源
-      names: shardfk-2020,shardfk-2021
+      names: shardfk-2020,shardfk-2021 #数据源名称，命名随意，为了在FKDatabaseStandardShardingAlgorithm方便获取数据库名，这里定义和数据库名一致
       shardfk-2020:
         type: com.alibaba.druid.pool.DruidDataSource
         driver: com.mysql.cj.jdbc.Driver
-        url: jdbc:mysql://IP:3306/shardfk-2020?characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT%2B8
+        url: jdbc:mysql://IP:3306/shardfk-2020?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT%2B8
         username: root
         password: XXXX
       shardfk-2021:
@@ -22,19 +22,17 @@ spring:
         url: jdbc:mysql://IP:3306/shardfk-2021?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT%2B8
         username: root
         password: XXXX
-    sharding: #分表规则
-      default-data-source-name: shardfk-2020 #默认数据源，就是不用进行分库分表
+    sharding:
+      default-data-source-name: shardfk-2020 #
+      default-database-strategy: #默认分库策略
+        standard:
+          #标准策略下分片算法包含2个precise + range，range是可选的，但是如果使用 range就必须同precise一起使用，如果不配置range，SQL中的BETWEEN AND将按照全库路由处理。
+          sharding-column: create_time
+          precise-algorithm-class-name: com.shard.algorithm.FKDatabaseStandardShardingAlgorithm
+          range-algorithm-class-name: com.shard.algorithm.FKDatabaseStandardShardingAlgorithm
       tables:
-        user: #表名
+        user: #逻辑表名
           actual-data-nodes: shardfk-$->{2020..2021}.user_$->{1..3} #配置表信息
-          #库分片策略
-          database-strategy:
-            standard:
-              #自定义时间库分片算法
-              #标准策略下分片算法包含2个precise + range，range是可选的，但是如果使用 range就必须同precise一起使用，如果不配置range，SQL中的BETWEEN AND将按照全库路由处理。
-              sharding-column: create_time #分片列名称
-              precise-algorithm-class-name: com.shard.algorithm.FKDatabaseStandardShardingAlgorithm
-              range-algorithm-class-name: com.shard.algorithm.FKDatabaseStandardShardingAlgorithm
           #表分片策略
           table-strategy:
             standard:
