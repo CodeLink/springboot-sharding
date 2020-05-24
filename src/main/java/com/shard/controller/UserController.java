@@ -41,4 +41,15 @@ public class UserController {
         return userService.between(user);
     }
 
+    /**
+     * 分库分表-强制路由指定 库、表。针对application-hi配置测试
+     *
+     * @param user
+     * @return
+     */
+    @PostMapping("routStrategy")
+    public List<User> routStrategy(User user, String database, String table) {
+        return userService.routStrategy(user, database, table);
+    }
+
 }
